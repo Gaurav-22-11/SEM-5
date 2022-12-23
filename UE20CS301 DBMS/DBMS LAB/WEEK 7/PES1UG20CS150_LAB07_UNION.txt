@@ -1,0 +1,9 @@
+select tu.user_id,tu.user_type,tu.firstname,tu.lastname from train_user as tu natural join (select passenger_id as user_id from ticket where departure ='Bengaluru' and arrival ='Chennai' and travel_date in ((select travel_date from ticket where travel_date like '2022-08%')union(select travel_date from ticket where travel_date like '2021-10%'))) as y;
+
+select tu.user_id,tu.user_type,tu.firstname,tu.lastname from train_user as tu natural join (select passenger_id as user_id from ticket where departure ='Bengaluru' and arrival ='Chennai' and travel_date in ((select travel_date from ticket where travel_date like '2022-08%')intersect(select travel_date from ticket where travel_date like '2021-10%'))) as y;
+
+select tu.user_id,tu.user_type,tu.firstname,tu.lastname from train_user as tu natural join (select passenger_id as user_id from ticket where departure ='Bengaluru' and arrival ='Chennai' and travel_date in ((select travel_date from ticket where travel_date like '2022-08%')except(select travel_date from ticket where travel_date like '2021-10%'))) as y;
+
+select tu.user_id,tu.user_type,tu.firstname,tu.lastname from train_user as tu natural join(select t.passenger_id as user_id from ticket t where t.departure="Bengaluru" and t.arrival="Chennai" and exists (select t1.passenger_id from ticket t1 where t1.departure = "Chennai" and t1.arrival="bengaluru" and t.passenger_id=t1.passenger_id and t.travel_date-t1.travel_date<=7))as p;
+
+select tu.user_id,tu.user_type,tu.firstname,tu.lastname from train_user as tu natural join(select t.passenger_id as user_id from ticket t where t.departure="Bengaluru" and t.arrival="Chennai" and not exists (select t1.passenger_id from ticket t1 where t1.departure = "Chennai" and t1.arrival="bengaluru" and t.passenger_id=t1.passenger_id ))as p;

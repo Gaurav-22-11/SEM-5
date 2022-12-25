@@ -1,0 +1,15 @@
+---
+title: "UE20CS312 - Data Analytics - Worksheet 1a - Part 1 - Exploring data with R"
+subtitle: "PES University"
+author:
+- 'GAURAV MAHAJAN, Dept. of CSE - PES1UG20CS150'
+output: pdf_document
+urlcolor: blue
+editor_options:
+markdown:
+wrap: 72
+---
+library(tidyverse)
+df<-read_csv("top_1000_instagrammers.csv")
+
+

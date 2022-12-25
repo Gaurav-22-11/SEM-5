@@ -1,0 +1,541 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={UE20CS312 - Data Analytics - Worksheet 2a - Simple Linear Regression},
+  pdfauthor={GAURAV MAHAJAN},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{UE20CS312 - Data Analytics - Worksheet 2a - Simple Linear
+Regression}
+\author{GAURAV MAHAJAN}
+\date{2022-09-15}
+
+\begin{document}
+\maketitle
+
+\#\#Importing Libraries and Loading Dataset
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'ggplot2' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'dplyr' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'tidyverse' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## -- Attaching packages --------------------------------------- tidyverse 1.3.2 --
+\end{verbatim}
+
+\begin{verbatim}
+## v tibble  3.1.8     v purrr   0.3.4
+## v tidyr   1.2.0     v stringr 1.4.0
+## v readr   2.1.2     v forcats 0.5.2
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'tibble' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'tidyr' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'readr' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'purrr' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'stringr' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'forcats' was built under R version 4.2.1
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"dragon\_neurons.csv"}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(df)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   X axon_diameter conduction_velocity X.1
+## 1 0            72            4.541130  NA
+## 2 1            66            4.275300  NA
+## 3 2            74            4.912093  NA
+## 4 3             9            2.872806  NA
+## 5 4             9            2.395194  NA
+## 6 5            65            5.120160  NA
+\end{verbatim}
+
+\#\#\#Creating separate dataframes for diameter and conduction velocity
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{diameter }\OtherTok{\textless{}{-}}\NormalTok{ df}\SpecialCharTok{$}\StringTok{\textquotesingle{}axon\_diameter\textquotesingle{}}
+\NormalTok{velocity }\OtherTok{\textless{}{-}}\NormalTok{ df}\SpecialCharTok{$}\StringTok{\textquotesingle{}conduction\_velocity\textquotesingle{}}
+\end{Highlighting}
+\end{Shaded}
+
+\#\#\#Problem 1 (1 point) Find if a linear model is appropriate for
+representing the relationship between the conduction velocity (response
+variable) and axon diameter (explanatory variable) by finding the OLS
+solution. Print out the slope and the coefficient. Plot the OLS best-fit
+line of the model (Hint: use the ggplot library).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{slope}\OtherTok{\textless{}{-}}\FunctionTok{cor}\NormalTok{(velocity,diameter)}\SpecialCharTok{*}\NormalTok{(}\FunctionTok{sd}\NormalTok{(velocity)}\SpecialCharTok{/}\FunctionTok{sd}\NormalTok{(diameter))}
+\NormalTok{slope}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.02475302
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{intercept}\OtherTok{\textless{}{-}}\FunctionTok{mean}\NormalTok{(velocity)}\SpecialCharTok{{-}}\NormalTok{slope}\SpecialCharTok{*}\FunctionTok{mean}\NormalTok{(diameter)}
+\NormalTok{intercept}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2.987611
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(}\AttributeTok{x =}\NormalTok{diameter,}\AttributeTok{y=}\NormalTok{velocity,}\AttributeTok{main=}\StringTok{\textquotesingle{}Scatter Plot\textquotesingle{}}\NormalTok{,}\AttributeTok{xlab =} \StringTok{\textquotesingle{}Axon Diameter\textquotesingle{}}\NormalTok{, }\AttributeTok{ylab =} \StringTok{\textquotesingle{}Conduction Velocity\textquotesingle{}}\NormalTok{, }\AttributeTok{pch =} \DecValTok{16}\NormalTok{,}\AttributeTok{col=} \StringTok{"dark blue"}\NormalTok{)}
+\FunctionTok{abline}\NormalTok{(}\FunctionTok{lm}\NormalTok{(velocity}\SpecialCharTok{\textasciitilde{}}\NormalTok{diameter),}\AttributeTok{col =}\StringTok{"dark gray"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PES1UG20CS150_WORKSHEET_2a_files/figure-latex/unnamed-chunk-3-1.pdf}
+\#\#\#Problem 2 (3 points) Plot the residuals of the model. Do the
+residuals look like white noise? If they do not, try to find a suitable
+functional form (hint: try transforming either x or y using natural-log
+or squares).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{reg\_mod }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(velocity }\SpecialCharTok{\textasciitilde{}}\NormalTok{ diameter, }\AttributeTok{data =}\NormalTok{ df)}
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{resid}\NormalTok{(reg\_mod)}
+\FunctionTok{plot}\NormalTok{(res, }\AttributeTok{type =} \StringTok{"b"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{abline}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PES1UG20CS150_WORKSHEET_2a_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{verbatim}
+## integer(0)
+\end{verbatim}
+
+No,the residuals do not seem to be of white noise kind.Hence going for
+the natural log transformation
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{logmodel }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\FunctionTok{log}\NormalTok{(conduction\_velocity) }\SpecialCharTok{\textasciitilde{}} \FunctionTok{log}\NormalTok{(axon\_diameter), }\AttributeTok{data =}\NormalTok{ df)}
+\NormalTok{log\_res }\OtherTok{\textless{}{-}} \FunctionTok{resid}\NormalTok{(logmodel)}
+\FunctionTok{plot}\NormalTok{(log\_res, }\AttributeTok{type =} \StringTok{"b"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{abline}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PES1UG20CS150_WORKSHEET_2a_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+\begin{verbatim}
+## integer(0)
+\end{verbatim}
+
+\#\#\#Problem 3 (3 points) Using Mahalanobis distance as a metric, are
+there any potential outliers you notice? What are their Mahalanobis
+distances? Use the model that you decided on in the previous problem
+(Problem 2) as your regression model. Ensure that you plot the ellipse
+with a radius equal to the square root of the Chi-square value with 2
+degrees of freedom and 0.95 probability.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{var }\OtherTok{\textless{}{-}}\NormalTok{ df[}\FunctionTok{c}\NormalTok{(}\StringTok{"axon\_diameter"}\NormalTok{, }\StringTok{"conduction\_velocity"}\NormalTok{)]}
+\FunctionTok{na.omit}\NormalTok{(var)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    axon_diameter conduction_velocity
+## 1             72            4.541130
+## 2             66            4.275300
+## 3             74            4.912093
+## 4              9            2.872806
+## 5              9            2.395194
+## 6             65            5.120160
+## 7             79            4.457886
+## 8             71            5.171822
+## 9             58            4.254082
+## 10            12            2.709620
+## 11            52            4.325285
+## 12            32            4.360330
+## 13            60            4.712175
+## 14            28            3.569837
+## 15            46            4.033227
+## 16            63            5.049463
+## 17            48            4.307548
+## 18            23            3.899511
+## 19            55            4.421036
+## 20            12            2.966179
+## 21            65            5.142475
+## 22            65            5.154147
+## 23            55            4.924939
+## 24            23            3.235679
+## 25            56            4.776524
+## 26            10            3.179216
+## 27            90            4.726781
+## 28            58            4.291057
+## 29            58            4.379883
+## 30            85            4.900027
+## 31            38            3.938970
+## 32            15            3.684369
+## 33            88            5.072452
+## 34            81            4.709887
+## 35            65            4.630635
+## 36            82            4.423754
+## 37            89            4.825450
+## 38            72            4.897530
+## 39            73            5.255260
+## 40            57            4.351882
+## 41            50            4.780395
+## 42            79            4.569002
+## 43            61            4.260878
+## 44            11            3.189608
+## 45            27            3.865496
+## 46             9            3.147883
+## 47            76            5.298221
+## 48            60            4.588713
+## 49            10            3.205583
+## 50            59            4.176738
+## 51            63            4.908392
+## 52            71            5.128692
+## 53            38            3.674961
+## 54            99            4.992772
+## 55            24            3.956765
+## 56            52            4.605855
+## 57            89            4.824891
+## 58            61            4.252118
+## 59            94            4.877474
+## 60            34            3.666817
+## 61             8            2.979719
+## 62            55            4.996601
+## 63            77            4.883008
+## 64            59            4.576930
+## 65            56            4.138600
+## 66            91            5.440959
+## 67            38            3.685671
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{var.center }\OtherTok{=} \FunctionTok{colMeans}\NormalTok{(var)}
+\NormalTok{var.cov }\OtherTok{=} \FunctionTok{cov}\NormalTok{(var)}
+
+\NormalTok{rad }\OtherTok{=} \FunctionTok{qchisq}\NormalTok{(}\AttributeTok{p =} \FloatTok{0.95}\NormalTok{, }\AttributeTok{df =} \DecValTok{2}\NormalTok{)}
+
+\NormalTok{rad }\OtherTok{=} \FunctionTok{sqrt}\NormalTok{(rad)}
+
+\NormalTok{ellipse }\OtherTok{\textless{}{-}}\NormalTok{ car}\SpecialCharTok{::}\FunctionTok{ellipse}\NormalTok{(}\AttributeTok{center =}\NormalTok{ var.center, }\AttributeTok{shape =}\NormalTok{ var.cov, }\AttributeTok{radius =}\NormalTok{ rad, }\AttributeTok{segments =} \DecValTok{150}\NormalTok{, }\AttributeTok{draw =} \ConstantTok{FALSE}\NormalTok{)}
+
+\NormalTok{ellipse }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(ellipse)}
+\FunctionTok{colnames}\NormalTok{(ellipse) }\OtherTok{\textless{}{-}} \FunctionTok{colnames}\NormalTok{(var)}
+\NormalTok{figure }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(var , }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ axon\_diameter , }\AttributeTok{y =}\NormalTok{ conduction\_velocity)) }\SpecialCharTok{+}
+       \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{size =} \DecValTok{2}\NormalTok{) }\SpecialCharTok{+}
+       \FunctionTok{geom\_polygon}\NormalTok{(}\AttributeTok{data =}\NormalTok{ ellipse , }\AttributeTok{fill =} \StringTok{"orange"}\NormalTok{ , }\AttributeTok{color =} \StringTok{"orange"}\NormalTok{ , }\AttributeTok{alpha =} \FloatTok{0.5}\NormalTok{)}\SpecialCharTok{+}
+       \FunctionTok{geom\_point}\NormalTok{(}\FunctionTok{aes}\NormalTok{(var.center[}\DecValTok{1}\NormalTok{] , var.center[}\DecValTok{2}\NormalTok{]) , }\AttributeTok{size =} \DecValTok{5}\NormalTok{ , }\AttributeTok{color =} \StringTok{"blue"}\NormalTok{) }\SpecialCharTok{+}
+       \FunctionTok{geom\_text}\NormalTok{( }\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =} \FunctionTok{row.names}\NormalTok{(var)) , }\AttributeTok{hjust =} \DecValTok{1}\NormalTok{ , }\AttributeTok{vjust =} \SpecialCharTok{{-}}\FloatTok{1.5}\NormalTok{ ,}\AttributeTok{size =} \FloatTok{2.5}\NormalTok{ ) }\SpecialCharTok{+}
+       \FunctionTok{ylab}\NormalTok{(}\StringTok{"Conduction Velocity"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{xlab}\NormalTok{(}\StringTok{"Axon Diameter"}\NormalTok{)}
+\NormalTok{figure}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{PES1UG20CS150_WORKSHEET_2a_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{distances }\OtherTok{\textless{}{-}} \FunctionTok{mahalanobis}\NormalTok{(}\AttributeTok{x =}\NormalTok{ var, }\AttributeTok{center =}\NormalTok{ var.center, }\AttributeTok{cov =}\NormalTok{ var.cov)}
+\NormalTok{cutoff }\OtherTok{\textless{}{-}} \FunctionTok{qchisq}\NormalTok{(}\AttributeTok{p =} \FloatTok{0.95}\NormalTok{ , }\AttributeTok{df =} \DecValTok{2}\NormalTok{)}
+\NormalTok{var[distances }\SpecialCharTok{\textgreater{}}\NormalTok{ cutoff ,]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   axon_diameter conduction_velocity
+## 5             9            2.395194
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Distance of outlier from the center of the ellipse"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Distance of outlier from the center of the ellipse"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{distances[}\DecValTok{5}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 8.597339
+\end{verbatim}
+
+\#\#\#Problem 4 (1 point) What are the R-squared values of the initial
+linear model and the functional form chosen in Problem 2? What do you
+infer from this? (hint: use the summary function on the created linear
+models)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(reg\_mod)[}\DecValTok{8}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $r.squared
+## [1] 0.7656189
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(logmodel)[}\DecValTok{8}\NormalTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $r.squared
+## [1] 0.8370537
+\end{verbatim}
+
+From the higher r squared values of the functional model, we can infer
+that the functional model is a better fit for our data.
+
+\#\#\#Problem 5 (2 points) Using the same summary function as Problem 4,
+determine if there is a statistically significant linear relationship at
+a significance value of 0.05 of the overall model chosen in Problem 2.
+What do you understand about the relationship between dragons' axon
+diameters and conduction velocity? (Hint: understand the values
+displayed in summary and search for the right data).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(reg\_mod)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = velocity ~ diameter, data = df)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.81519 -0.24935 -0.04665  0.32827  0.64757 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 2.987611   0.101069   29.56   <2e-16 ***
+## diameter    0.024753   0.001699   14.57   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3509 on 65 degrees of freedom
+## Multiple R-squared:  0.7656, Adjusted R-squared:  0.762 
+## F-statistic: 212.3 on 1 and 65 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(logmodel)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = log(conduction_velocity) ~ log(axon_diameter), data = df)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -0.193959 -0.059711 -0.003799  0.071776  0.115607 
+## 
+## Coefficients:
+##                    Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)         0.54666    0.05017   10.90 2.62e-16 ***
+## log(axon_diameter)  0.23701    0.01297   18.27  < 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.07465 on 65 degrees of freedom
+## Multiple R-squared:  0.8371, Adjusted R-squared:  0.8345 
+## F-statistic: 333.9 on 1 and 65 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+Because the p value is a lot lesser than 0.05, we can conclude there is
+a significant linear relationship between x and y because the
+correlation coefficient is significantly different from zero. Therefore,
+there is a significant linear relationship between the dragons' axon
+diameters and conduction velocity
+
+\end{document}

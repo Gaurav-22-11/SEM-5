@@ -1,0 +1,70 @@
+---
+title: "UE20CS312 - Data Analytics - Worksheet 3b - AR and MA models"
+author: "GAURAV MAHAJAN"
+date: '2022-10-16'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+###Problem 0 (0.5 point)
+Set the index of DataFrame to the Date column to make it a time series
+```{r}
+
+```
+##Problem 1 (1.5 point)
+
+Plot the time-series. Analyze the stationarity from the time-series. Provide reasoning for stationarity/non-
+stationarity based on visual inspection of time-series plot (0.5 point)
+```{r}
+
+```
+Plot the ACF plot of the Time series (upto 50 lags). Analyze the stationarity from ACF plot and provide
+reasoning (Hint: look at functions in statsmodels package) (1 Point)
+```{r}
+
+```
+###Problem 2 (2 point)
+Run Augmented Dickey Fuller Test. Analyze whether the time-series is stationary, based on ADF results
+(1 point)
+Hint: Use the print_adf_results function below to print the results of the ADF function cleanly after
+obtaining results from the library function. Pass the results from library function to print_adf_results
+function
+```{r}
+
+```
+Problem 3 (1 point)
+Plot both ACF and PACF plot. From these select optimal parameters for the ARIMA(p,q) model
+Hint: Negative values that are significantly outside the Confidence interval are considered significant too.
+Hint: p+q = 3
+```{r}
+
+```
+
+```{r}
+
+```
+
+###Problem 4 (2 point)
+Write a function to forecast values using only AR(p) model (2 Points)
+
+Only use pandas functions and Linear Regression from sklearn . LR documentation (https://scikit-
+learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html)
+
+Hint: Create p new columns in a new DataFrame that is a copy of transformed_df
+Each new column has lagged value of Price. Price_t-i (From Price_t-1 upto Price_t-p )
+Look at the shift function in pandas to create these new columns Link
+(https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.shift.html)
+```{r}
+
+```
+###Problem 5 (1 Point)
+Phew! Just handling AR(2) manually required us to difference, apply regression, undifference. Let's make all
+of this much easier with a simple library function
+Use the ARIMA function using parameters picked to forecast values (1 point)
+```{r}
+
+```
+###Problem 6 (1 point)
+Evaluate the ARIMA model using Ljung Box test. Based on p-value infer if the Model shows lack of fit

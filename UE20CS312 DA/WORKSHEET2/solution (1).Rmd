@@ -1,0 +1,130 @@
+## Loading the Dataset
+```{r dataload, message=FALSE, warning=FALSE, results=TRUE}
+library(tidyverse)
+spotify_df <- read_csv('spotify.csv')
+```
+
+## Problem-1    (0.5 Points)
+
+Check for missing values in the dataset and normalize the dataset. 
+(centralised the means or use z score test)
+
+```{r}
+library(tidyverse)
+library(corrplot)
+library(olsrr)
+
+colSums(is.na(spotify_df))
+```
+#no missing data in the dataset
+```{r}
+#for scaling : 
+#for z score scaling to be done centering is done
+spotify_df<-as.data.frame(scale(spotify_df))
+```
+
+## Problem-2    (2 Points)
+
+Fit a linear model to predict the *energy* rating using *all* other
+attributes.Get the summary of the model and explain the results in detail.[*Hint*
+: Use the lm() function. [Click
+here](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/lm)
+To get the documentation of the same.]
+
+```{r}
+full_model<-lm(energy~.,data = spotify_df)  #for all 
+summary(full_model)
+```
+#stars tells us the significance . if alpha is 0.05 :: we select : danceability , loudness , acousticness , instrumentalness , valence according to this model
+
+#betas are not all zero seeing he F statistic
+
+
+## Problem-3    (2 points)
+
+With the help of a correlogram and scatter plots, choose the features you
+think are important and model an MLR. Justify your choice and explain the new findings.
+```{r}
+correlation<- cor(spotify_df)
+corrplot(correlation,method='number')
+```
+```{r}
+plot(x=spotify_df$loudness , y=spotify_df$energy , xlab="loudness" , ylab="energy" , main = "Energy vs Loudness")
+
+```
+```{r}
+reduced_model<-lm(formula = energy ~ loudness , data = spotify_df)
+summary(reduced_model)
+```
+
+## Problem-4    (1 Point)
+
+Conduct a partial F-test to determine if the attributes not chosen by
+you in *Problem-3* are significant to predict the energy.What are the
+null and alternate hypotheses? [ *Hint* : Use the anova function between
+models created in *Problem-2* and *Problem-3*]
+
+```{r}
+anova(reduced_model,full_model)
+```
+#reject the null hypothesis therefore there were a few significant features that have not been considered
+
+## Problem-5    (1.5 Points)
+
+AIC - Akaike Information Criterion is used to compare different models
+and determine the best fit for the data. The best-fit model according to
+AIC is the one that explains greatest amount of variation using the
+fewest number of attributes. Check
+[this](https://www.scribbr.com/statistics/akaike-information-criterion/)
+resource to learn more about AIC.
+
+Build a model based on AIC using Stepwise AIC regression.Elucidate your observations from the new model. ( *Hint* : Use
+an appropriate function in
+[olsrr](https://www.rdocumentation.org/packages/olsrr/versions/0.5.3)
+package.)
+
+##AIC --> encourges a better performance model
+##BIC --> penalizes the complex model
+
+##therefore : AIC and BIC should be as less as possible for it to be a proper model
+
+
+```{r}
+stepwise_model<-lm(energy ~ loudness + acousticness + danceability + valence + instrumentalness + mode + key , data=spotify_df)
+summary(stepwise_model)
+```
+```{r}
+plot(full_model$residuals , pch = 16, col="red")
+abline(h=0,lty=2)
+ols_plot_resid_hist(full_model)
+
+```
+
+```{r}
+plot(reduced_model$residuals , pch = 16, col="red")
+abline(h=0,lty=2)
+ols_plot_resid_hist(reduced_model)
+```
+```{r}
+plot(stepwise_model$residuals , pch = 16, col="red")
+abline(h=0,lty=2)
+ols_plot_resid_hist(stepwise_model)
+```
+
+## Problem-7    (2 Points)
+For the model built in **_Problem-2_** , determine the presence of multicollinearity using VIF. Determine if there are outliers in the data using [Cook's Distance](https://www.statisticshowto.com/cooks-distance/). If you find any , remove the outliers and fit the model for _Problem-2_ and see if the fit improves. [ _Hint_ : All the relevant functions can be found in _olsrr_ package. An observation can be termed as an outlier if it has a Cook's distance of more than 4/n where n is the number of records.] 
+
+```{r}
+ols_vif_tol(full_model)
+```
+##everything is below 4 so nothing is violating 
+
+```{r}
+cooks <- ols_plot_cooksd_chart(full_model)
+```
+```{r}
+new_df<-spotify_df[-c(30,35,49,84,114,120,127,144,153,159,171,172,187,191),]
+new_full_model<-lm(energy~.,data=new_df)
+summary(new_full_model)
+```
+

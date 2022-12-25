@@ -1,0 +1,179 @@
+---
+title: "PES University, Bangalore"
+author:
+- "UE20CS312 - Data Analytics - Worksheet 1b - Correlation Analysis"
+- "Designed by Vibha Masti, Dept. of CSE - vibha@pesu.pes.edu"
+subtitle: Established under Karnataka Act No. 16 of 2013
+output:
+  word_document: default
+  pdf_document: default
+urlcolor: blue
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+## Correlation
+
+Correlation is a measure of the strength and direction of relationship that exists between two random variables and is measured using correlation coefficient. Correlation can assist data scientists to choose the variables for model building that is used for solving an analytics problem.
+
+There are different types of correlation coefficients, based on the nature of the data being compared:
+
+-   Between two continuous (interval, ratio) random variables - *Pearson's Product Moment Correlation Coefficient*
+-   Between two ordinal random variables - *Spearman-Rank Correlation Coefficient*
+-   Between a continuous RV and a dichotomous RV - *Point Bi-Serial Correlation Coefficient*
+-   Between two binary random variables - *Phi Coefficient*
+
+### Road Accidents
+
+India is the world's second-most populous country with a population of around 1.2 billion people (as of July 2022). Roads are a very important mode of transport in India, spanning over 6.2 million kilometers of length, making it the country with the second-largest road network, after the United States of America. (Source: [Wikipedia](https://en.wikipedia.org/wiki/Roads_in_India)). With India trying to modernize its road infrastructure, there is still the problem of frequent road accidents.
+
+Road accidents in India is a major cause of death and injury. The NCRB (National Crime Records Bureau) of India collects detailed data on traffic accidents and collisions annually. Please download the dataset from the [GitHub repository](https://github.com/Data-Analytics-UE20CS312/Unit-1-Worksheets/blob/main/1b%20-%20Correlation%20Analysis/road_accidents_india_2016.csv) that contains road accident data in India from 2016. The data was obtained from [this kaggle dataset](https://www.kaggle.com/datasets/greeshmagirish/road-accidents-in-india-20142017).
+
+**Data Dictionary**
+
+    S. No.: Serial number
+    State/ UT: name of state/union terrirory in India
+    Fine/Clear - Total Accidents: total accidents per state/UT in Fine/Clear weather conditions
+    Fine/Clear - Persons Killed: total fatalities per state/UT in Fine/Clear weather conditions
+    Fine/Clear - Persons Injured: total injured people per state/UT in Fine/Clear weather conditions
+    Mist/ Foggy - Total Accidents: total accidents per state/UT in Mist/Foggy weather conditions
+    Mist/ Foggy - Persons Killed: total fatalities per state/UT in Mist/Foggy weather conditions
+    Mist/ Foggy - Persons Injured: total injured people per state/UT in Mist/Foggy weather conditions
+    Cloudy - Total Accidents: total accidents per state/UT in Cloudy weather conditions
+    Cloudy - Persons Killed: total fatalities per state/UT in Cloudy weather conditions
+    Cloudy - Persons Injured: total injured people per state/UT in Cloudy weather conditions
+    Rainy - Total Accidents: total accidents per state/UT in Rainy weather conditions
+    Rainy - Persons Killed: total fatalities per state/UT in Rainy weather conditions
+    Rainy - Persons Injured: total injured people per state/UT in Rainy weather conditions
+    Snowfall - Total Accidents: total accidents per state/UT in Snowfall weather conditions
+    Snowfall - Persons Killed: total fatalities per state/UT in Snowfall weather conditions
+    Snowfall - Persons Injured: total injured people per state/UT in Snowfall weather conditions
+    Hail/Sleet - Total Accidents: total accidents per state/UT in Hail/Sleet weather conditions
+    Hail/Sleet - Persons Killed: total fatalities per state/UT in Hail/Sleet weather conditions
+    Hail/Sleet - Persons Injured: total injured people per state/UT in Hail/Sleet weather conditions
+    Dust Storm - Total Accidents: total accidents per state/UT in Dust Storm weather conditions
+    Dust Storm - Persons Killed: total fatalities per state/UT in Dust Storm weather conditions
+    Dust Storm - Persons Injured: total injured people per state/UT in Dust Storm weather conditions
+    Others - Total Accidents: total accidents per state/UT in Other weather conditions
+    Others - Persons Killed: total fatalities per state/UT in Other weather conditions
+    Others - Persons Injured: total injured people per state/UT in Other weather conditions
+
+
+### Points
+The problems in this worksheet are for a total of 10 points with each problem having a different weightage.
+
+- *Problem 1*: 2 points
+- *Problem 2*: 2 points
+- *Problem 3*: 3 points
+- *Problem 4*: 1.5 points
+- *Problem 5*: 1.5 points
+
+### Problem 1 (2 points)
+
+**Find the total number of accidents in each state for the year 2016 and display your results. Make sure to display all rows while printing the dataframe. Print only the necessary columns. (Hint: use the grep command to help filter out column names).**
+
+```{r  message=FALSE, warning=FALSE}
+library(ggpubr)
+library(dplyr)
+df <- read.csv('road_accidents_india_2016.csv', row.names=1)
+acc_cols <- grep("Total.Accidents$",colnames(df),ignore.case = T,value = TRUE)
+total_accidents<-data.frame(state.ut=df$State..UT,total_acc=rowSums(df[,c(acc_cols)],na.rm=TRUE))
+print.data.frame(total_accidents)
+```
+
+
+### Problem 2 (2 points)
+
+**Find the ($\text{fatality rate} = \dfrac{\text{total number of deaths}}{\text{total number of accidents}}$) in each state. Find out if there is a significant linear correlation at a significance of $\alpha=0.05$ between the *fatality rate* of a state and the *mist/foggy rate* (fraction of total accidents that happen in mist/foggy conditions).**
+
+Correlation between two continuous RVs: Pearson's correlation coefficient. Pearson's correlation coefficient between two RVs $x$ and $y$ is given by:
+
+$$
+  \rho = \frac{\text{Covariance}(x, y)}{\sigma_x \sigma_y}
+$$
+
+where $\sigma$ is the standard deviation of a variable.
+
+
+**Plot the fatality rate against the mist/foggy rate. (Hint: use the `ggscatter` library to plot a scatterplot with the confidence interval of the correlation coefficient).**
+
+**Plot the fatality rate and mist/foggy rate (see [this](https://r-graph-gallery.com/13-scatter-plot.html) and [this](https://r-graph-gallery.com/6-graph-parameters-reminder.html) for R plot customization).**
+```{r message=FALSE, warning=FALSE}
+death_cols <- grep("Persons.Killed$",colnames(df),ignore.case=T,value=TRUE)
+total_accidents$total_deaths <- rowSums(df[,c(death_cols)])
+total_accidents$fatality_rate <- total_accidents$total_deaths/total_accidents$total_acc
+total_accidents$mist_rate <- df$Mist..Foggy...Total.Accidents/total_accidents$total_acc
+print(head(total_accidents))
+```
+
+```{r message=FALSE, warning=FALSE, results=FALSE}
+plot(x=total_accidents$fatality_rate,y=total_accidents$mist_rate)
+```
+
+```{r message=FALSE, warning=FALSE}
+r <- cor(total_accidents$fatality_rate,total_accidents$mist_rate)
+r
+```
+
+```{r message=FALSE, warning=FALSE}
+corr_test <- cor.test(total_accidents$fatality_rate,total_accidents$mist_rate,method = "pearson")
+print(corr_test)
+
+```
+
+### Problem 3 (3 points)
+
+**Rank the states based on total accidents and total fatalities (give a rank of 1 to the state that has the highest value of a property). You are free to use any tie-breaking method for assigning ranks.**
+
+**Find the Spearman-Rank correlation coefficient between the two rank columns and determine if there is any statistical significance at a significance level of $\alpha=0.05$. Also test the hypothesis that the correlation coefficient is at least $0.2$.**
+
+The t statistic is given by 
+
+\[
+t = \dfrac{r_s - \rho_s}{\sqrt{\dfrac{1-r_s^2}{n-2}}}
+\]
+
+Where $r_s$ is the calculated Spearman-Rank correlation coefficient and $\rho_s$ is the value of the population correlation coefficient being tested against.
+```{r message=FALSE, warning=FALSE,}
+total_accidents$acc_rank <- rank(desc(total_accidents$total_acc),ties.method='random')
+total_accidents$death_rank <- rank(desc(total_accidents$total_deaths),ties.method='random')
+rs <- cor(total_accidents$acc_rank,total_accidents$death_rank,method="spearman")
+rs
+
+degrees <- nrow(total_accidents)-2
+t_stat<-(rs-0.2)/sqrt(1-rs*rs)/(nrow(total_accidents)-2)
+t_stat
+2*pt(q=t_stat,df=degrees,lower.tail=FALSE)
+```
+
+### Problem 4 (1.5 points)
+
+**Convert the column `Hail.Sleet...Total.Accidents` to a binary column as follows. If a hail/sleet accident has occurred in a state, give that state a value of 1. Otherwise, give it a value of 0. Once converted, find out if there is a significant correlation between the `hail_accident_occcur` binary column created and the number of rainy total accidents for every state.** 
+
+**Calculate the point bi-serial correlation coefficient between the two columns. (Hint: it is equivalent to calculating the Pearson correlation between a continuous and a dichotomous variable. You could also use the `ltm` package's `biserial.cor` function).**
+
+```{r message=FALSE, warning=FALSE}
+hail_accident_occur <- ifelse(df$Hail.Sleet...Total.Accidents>0, 1, 0)
+head(hail_accident_occur)
+rs <- cor.test(df$Rainy...Total.Accidents,hail_accident_occur)
+rs
+
+```
+
+
+### Problem 5 (1.5 points)
+
+**Similar to in Problem 4, create a binary column to represent whether a dust storm accident has occurred in a state (1 = occurred, 0 = not occurred). Convert the two columns into a contingency table.**
+
+**Calculate the phi coefficient of the two tables. (Hint: use the `psych` package).**
+
+```{r  message=FALSE, warning=FALSE}
+dust_storm_accident <- ifelse(df$Dust.Storm...Total.Accidents>0, 1, 0)
+head(dust_storm_accident)
+contingency_table <- table(hail_accident_occur,dust_storm_accident)
+contingency_table
+library("psych")
+rc <- phi(contingency_table)
+rc
+```

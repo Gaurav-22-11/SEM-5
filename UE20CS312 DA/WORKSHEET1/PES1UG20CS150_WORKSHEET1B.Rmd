@@ -1,0 +1,126 @@
+---
+title: "UE20CS312 - Data Analytics - Worksheet 1b - Correlation Analysis"
+author: "GAURAV MAHAJAN"
+date: '2022-09-09'
+output: pdf_document
+---
+```{r}
+library(ggpubr)
+library(dplyr)
+
+df<-read.csv('road_accidents_india_2016.csv',row.names = 1)
+df
+```
+### Problem 1 (2 points)
+
+**Find the total number of accidents in each state for the year 2016 and display your results. Make sure to display all rows while printing the dataframe. Print only the necessary columns. (Hint: use the grep command to help filter out column names).**
+```{r}
+acc_cols <- grep("Total.Accidents$",colnames(df),ignore.case = T,value = TRUE)
+total_accidents<-data.frame(state.ut=df$State..UT,
+                            total_accidents=rowSums(df[,c(acc_cols)],
+                                                    na.rm=TRUE))
+print.data.frame(total_accidents)
+```
+### Problem 2 (2 points)
+
+**Find the ($\text{fatality rate} = \dfrac{\text{total number of deaths}}{\text{total number of accidents}}$) in each state. Find out if there is a significant linear correlation at a significance of $\alpha=0.05$ between the *fatality rate* of a state and the *mist/foggy rate* (fraction of total accidents that happen in mist/foggy conditions).**
+```{r}
+death_cols=grep("Persons.Killed$",colnames(df),ignore.case =TRUE, value = TRUE)
+totalAccidents$totalDeaths <- rowSums(df[,c(death_cols)])
+totalAccidents$fatalityRate <- totalAccidents$totalDeaths/totalAccidents$total_acc
+totalAccidents$mist_rate <- df$Mist..Foggy...Total.Accidents/totalAccidents$total_acc
+df_new=data.frame(totalAccidents)
+print(df_new)
+```
+**Plot the fatality rate against the mist/foggy rate. (Hint: use the `ggscatter` library to plot a scatterplot with the confidence interval of the correlation coefficient).**
+```{r}
+ggscatter(df_new, x = "fatalityRate", y = "mist_rate",
+   color = "black", shape = 21, size = 3, # Points color, shape and size
+   
+   add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
+   conf.int = TRUE, # Add confidence interval
+   cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
+   cor.coeff.args = list(method = "pearson", label.sep = "\n")
+   )
+
+```
+```{r}
+r <- cor(total_accidents$fatality_rate,total_accidents$mist_rate)
+r
+corr_test <- cor.test(total_accidents$fatality_rate,total_accidents$mist_rate,method = "pearson")
+print(corr_test)
+```
+### Problem 3 (3 points)
+
+**Rank the states based on total accidents and total fatalities (give a rank of 1 to the state that has the highest value of a property). You are free to use any tie-breaking method for assigning ranks.**
+
+```{r}
+total_accidents$acc_rank <- rank(desc(total_accidents$total_acc),ties.method='random')
+total_accidents$death_rank <- rank(desc(total_accidents$total_deaths),ties.method='random')
+total_accidents
+```
+**Find the Spearman-Rank correlation coefficient between the two rank columns and determine if there is any statistical significance at a significance level of $\alpha=0.05$. Also test the hypothesis that the correlation coefficient is at least $0.2$.**
+```{r}
+rs <- cor(total_accidents$acc_rank,total_accidents$death_rank,method="spearman")
+rs
+```
+
+```{r}
+degrees <- nrow(total_accidents)-2
+t_stat<-(rs-0.2)/sqrt(1-rs*rs)/(nrow(total_accidents)-2)
+t_stat
+```
+```{r}
+2*pt(q=t_stat,df=degrees,lower.tail=FALSE)
+```
+It is observed that the calculated t-test value is greater than the critical value of t and hence we we reject the null hypothesis and conclude that there is a significant correlation between Accident ranks and death ranks.
+
+### Problem 4 (1.5 points)
+
+**Convert the column `Hail.Sleet...Total.Accidents` to a binary column as follows. If a hail/sleet accident has occurred in a state, give that state a value of 1. Otherwise, give it a value of 0. Once converted, find out if there is a significant correlation between the `hail_accident_occcur` binary column created and the number of rainy total accidents for every state.** 
+
+**Calculate the point bi-serial correlation coefficient between the two columns. (Hint: it is equivalent to calculating the Pearson correlation between a continuous and a dichotomous variable. You could also use the `ltm` package's `biserial.cor` function).**
+```{r}
+library(tibble)
+df <- df %>%
+  add_column(hail_accident_occcur = 
+               if_else(.$Hail.Sleet...Total.Accidents < 1, 0, 1),
+             .after="Hail.Sleet...Total.Accidents")
+head(df,10)
+```
+```{r}
+library(ltm)
+biserial.cor(df$Rainy...Total.Accidents, df$hail_accident_occcur, use = c("all.obs"), level = 2)
+
+```
+We can infer that the relation between rainy accidents and hail accidents there is a very very weak relationship.
+
+### Problem 5 (1.5 points)
+
+**Similar to in Problem 4, create a binary column to represent whether a dust storm accident has occurred in a state (1 = occurred, 0 = not occurred). Convert the two columns into a contingency table.**
+
+**Calculate the phi coefficient of the two tables. (Hint: use the `psych` package).**
+
+```{r}
+library(tibble)
+df <- df %>%
+  add_column(duststorm_accident_occcur = 
+               if_else(.$Dust.Storm...Total.Accidents < 1, 0, 1),
+             .after="Dust.Storm...Total.Accidents")
+head(df,10)
+```
+```{r}
+con_df = data.frame(
+  "hail" = df$hail_accident_occcur,
+  "dust" = df$duststorm_accident_occcur
+)
+ 
+# Creating contingency table from data using table()
+contingency_table = table(con_df)
+print(contingency_table)
+```
+```{r}
+library(psych)
+phi(contingency_table)
+```
+Its a strong relationship.

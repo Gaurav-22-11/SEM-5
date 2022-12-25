@@ -1,0 +1,114 @@
+---
+title: 'UE20CS312 - Data Analytics Worksheet 2b : Multiple Linear Regression'
+author: "GAURAV MAHAJAN"
+date: '2022-09-15'
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+###Importing libraries and uploading the dataset
+```{r}
+library(tidyverse)
+library(corrplot)
+library(olsrr)
+df <- read_csv('spotify.csv')
+head(df)
+```
+
+###Problem-1 (0.5 Points)
+Check for missing values in the dataset and normalize the dataset.
+```{r}
+#checking for missing values
+sum(is.na(df))
+#Normalisation
+min_max_norm <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+df_norm <- as.data.frame(lapply(df, min_max_norm))
+```
+This implies there is no missing data in the dataset
+```{r}
+#for scaling : 
+#for z score scaling to be done centering is done
+df<-as.data.frame(scale(df))
+```
+
+###Problem-2 (2 Points)
+Fit a linear model to predict the energy rating using all other attributes.Get the summary of the model and
+explain the results in detail.[Hint : Use the lm() function. Click here To get the documentation of the same.]
+```{r}
+#For all the attributes fitting a linear model
+full_model<-lm(energy~.,data = df)
+summary(full_model)
+```
+The asterisks tell us the significance .If alpha is 0.05 :: we select : danceability , loudness , acousticness , instrumentalness , valence according to this model.Betas are not all zero seeing he F statistic
+
+###Problem-3 (2 points)
+With the help of a correlogram and scatter plots, choose the features you think are important and model an
+MLR. Justify your choice and explain the new findings.
+```{r}
+df_cor <- cor(df_norm)
+corrplot(df_cor, order = "hclust", method = "number")
+plot(df_norm)
+#energy has significant positive correlation with loudness, valence and tempo
+#energy has significant negative correlation with acousticness, instrumentalness
+#these variables are significant in the model
+
+model_cor <- lm(energy~loudness+acousticness+valence+tempo+instrumentalness, data=df_norm)
+summary(model_cor)
+```
+
+
+###Problem-4 (1 Point)
+Conduct a partial F-test to determine if the attributes not chosen by you in Problem-3 are significant to
+predict the energy.What are the null and alternate hypotheses? [ Hint : Use the anova function between
+models created in Problem-2 and Problem-3 ]
+```{r}
+anova(model_cor,full_model)
+```
+
+
+###Problem-5 (1.5 Points)
+AIC - Akaike Information Criterion is used to compare different models and determine the best fit for the
+data. The best-fit model according to AIC is the one that explains greatest amount of variation using the
+fewest number of attributes. Check this resource to learn more about AIC.
+Build a model based on AIC using Stepwise AIC regression.Elucidate your observations from the new model.
+( Hint : Use an appropriate function in olsrr package.)
+```{r}
+stepwise_model<-lm(energy ~ loudness + acousticness + danceability + valence + instrumentalness + mode + key , data=df)
+summary(stepwise_model)
+```
+###Problem-6 (1 Point)
+Plot the residuals of the models built till now and comment on it satisfying the assumptions of MLR.
+```{r}
+plot(full_model$residuals , pch = 16, col="red")
+abline(h=0,lty=2)
+ols_plot_resid_hist(full_model)
+```
+```{r}
+plot(model_cor$residuals , pch = 16, col="red")
+abline(h=0,lty=2)
+ols_plot_resid_hist(model_cor)
+```
+
+Problem-7 (2 Points)
+For the model built in Problem-2 , determine the presence of multicollinearity using VIF. Determine if
+there are outliers in the data using Cook’s Distance. If you find any , remove the outliers and fit the model
+for Problem-2 and see if the fit improves. [ Hint : All the relevant functions can be found in olsrr package.
+An observation can be termed as an outlier if it has a Cook’s distance of more than 4/n where n is the
+number of records.]
+```{r}
+ols_vif_tol(full_model)
+cooks <- ols_plot_cooksd_chart(full_model)
+```
+```{r}
+new_df<-df[-c(30,35,49,84,114,120,127,144,153,159,171,172,187,191),]
+new_full_model<-lm(energy~.,data=new_df)
+summary(new_full_model)
+```
+

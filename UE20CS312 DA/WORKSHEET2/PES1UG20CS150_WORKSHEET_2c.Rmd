@@ -1,0 +1,180 @@
+---
+title: "UE20CS312 - Data Analytics  Worksheet 2c - Logistic Regression"
+author: "Gaurav Dept. of CSE - PES1UG20CS150"
+date: '2022-09-19'
+output:
+  word_document: default
+  html_document: default
+---
+```{r}
+library(tidyverse)
+library(InformationValue)
+char_preds <- read.csv('got_characters.csv')
+head(char_preds,10)
+```
+### Problem 1 (1 point)
+
+How many characters from the SoIaF world does this dataset contain information on? 
+Calculate the percentage of missing data for each column of the dataset and print them out in descending order as a dataframe. 
+
+*Hint:* Make sure to capture data from both missing values in numeric fields and empty strings in descriptive fields. Convert all missing placeholders to type NA.
+```{r}
+sprintf("The no. of characters listed in the data = %d", nrow(char_preds))
+```
+
+```{r}
+#changing all the missing or empty values to NA
+char_preds[char_preds == "" | char_preds == " "] <- NA
+head(char_preds,10)
+```
+
+
+#as we can see this dataframe created with the null value percentages is as shown above now this should be arranged in decreasing order
+```{r}
+df <- data.frame(colSums(is.na(char_preds)) / nrow(char_preds) * 100)
+colnames(df) <- c('percent_Missing') #rename cols with appropriate headers
+df$Columns <- rownames(df)
+rownames(df) <- NULL
+df
+new_df <- df[order(df$percent_Missing, decreasing = TRUE),]
+rownames(new_df) <- NULL
+new_df
+```
+### Problem 2 (2 points)
+
+#### Step 1
+What are the inferences you can draw from the output dataframe of the previous problem? How can we handle columns with extremely high proportions of missing data before moving on?
+
+*Hint:* Does missing data in a column tell you something about the target variable (`actual`)? If not, set a missing percentage threshold of 80%, deeming the column as having insufficient data, and drop the column. 
+```{r}
+cor.test(char_preds$actual,char_preds$isAliveMother)
+print("===================================================================================================")
+
+cor.test(char_preds$actual,char_preds$isAliveFather)
+print("===================================================================================================")
+
+cor.test(char_preds$actual,char_preds$isAliveSpouse)
+print("===================================================================================================")
+
+cor.test(char_preds$actual,char_preds$isAliveHeir)
+print("===================================================================================================")
+```
+```{r}
+removeable <- new_df[new_df$percent_Missing > 80,'Columns']
+removeable
+char_preds <- char_preds[!names(char_preds) %in% removeable]
+head(char_preds)
+```
+#### Step 2
+Impute missing data in the remaining numeric features with a reasonable statistic. Make sure you observe the distribution of the data in the columns to pick out a reasonable statistic. For categorical variables, convert the columns to numeric features. _Hint: Use the `unclass` function and impute missing categorical feature values with a `-1`._
+```{r}
+ggplot(char_preds, aes(x=age)) + geom_bar() 
+```
+
+```{r}
+char_preds<-char_preds %>% mutate(age = ifelse(is.na(age),median(age, na.rm = T),age))
+char_preds
+char_preds<-char_preds %>% mutate(dateOfBirth = ifelse(is.na(dateOfBirth),median(dateOfBirth, na.rm = T),dateOfBirth))
+char_preds
+char_categorical <- c("culture","title","house")
+char_preds[, char_categorical] <- lapply(char_preds[, char_categorical], as.factor)
+char_preds[, char_categorical] <- sapply(char_preds[, char_categorical], unclass)
+
+# Replace missing with -1
+char_preds[is.na(char_preds)] = -1
+
+head(char_preds,10)
+
+```
+### Problem 3 (2 points)
+
+#### Step 1: Check for Class Bias 
+Ideally, the proportion of both classes of the target variable should be the same. Is this so in the case of the target variable in this dataset? 
+```{r}
+table(char_preds$actual)
+```
+#### Step 2: Create Training and Test Samples 
+Perform undersampling in case of a class bias in the dataset. Create train and test splits. 
+
+_Hint: To create the training sample set, sample 70% of the class with lesser rows and sample the same number from the other class. Use the remaining rows from both classes to create the test split._
+```{r}
+input_ones <- char_preds[which(char_preds$actual == 1), ]
+input_zeros <- char_preds[which(char_preds$actual == 0), ]  # all 0's
+set.seed(100)  
+
+# Sample from all alive characters
+input_ones_training_rows <- sample(1:nrow(input_ones), 0.7*nrow(input_zeros)) 
+# Sample from all dead characters
+input_zeros_training_rows <- sample(1:nrow(input_zeros), 0.7*nrow(input_zeros))
+```
+```{r}
+training_ones <- input_ones[input_ones_training_rows, ]  
+training_zeros <- input_zeros[input_zeros_training_rows, ]
+
+# Row bind both class dataframes
+trainingData <- rbind(training_ones, training_zeros)
+# Shuffle rows 
+trainingData <- trainingData[sample(1:nrow(trainingData)), ]
+
+head(trainingData,10)
+```
+```{r}
+test_ones <- input_ones[-input_ones_training_rows, ]
+test_zeros <- input_zeros[-input_zeros_training_rows, ]
+
+testingData<-rbind(test_ones,test_zeros)
+testingData<-testingData[sample(1:nrow(testingData)),]
+head(testingData,10)
+```
+```{r}
+#Check the distribution of classes in the splits
+print("training data : ")
+table(trainingData$actual)
+print("testing data : ")
+table(testingData$actual)
+```
+### Problem 4 (3 points)
+
+#### Step 1: Build the Logisitic Regression Model 
+Train a logistic regression model to predict whether a character is dead by Book 5 (feature: `actual`) using the training split. Use the `summary` function to print the beta coefficients, p values and other statistics. Predict characters' deaths on the test split available.
+```{r}
+logitmod <- glm(actual ~ age + culture + male + book1 + isMarried + boolDeadRelations + isPopular + popularity, family = binomial(link="logit"), data=trainingData)
+
+summary(logitmod)
+#for predictions  : 
+predicted <- plogis(predict(logitmod, testingData))
+```
+### Step 2: Decide on the Optimal Prediction Probability Cutoff
+The default cutoff prediction probability score is 0.5 or the ratio of 1’s and 0’s in the training data. But sometimes, tuning the probability cutoff can improve the accuracy in both the training and test samples. Compute the optimal cutoff score (using the test split) that minimizes the misclassification error for the trained model.
+
+_Hint: Use a function from the InformationValue library to perform this task._
+
+```{r}
+library(InformationValue)
+optCutOff <- optimalCutoff(testingData$actual, predicted)[1] 
+optCutOff
+```
+
+```{r}
+misClassError(testingData$actual, predicted, threshold = optCutOff)
+sensitivity(testingData$actual, predicted, threshold = optCutOff)
+specificity(testingData$actual, predicted, threshold = optCutOff)
+```
+
+```{r}
+confusionMatrix(testingData$actual, predicted, threshold = optCutOff)
+```
+### Problem 5 (2 points)
+Using the optimal cutoff probability, compute and print the following using the predictions on the test set: 
+
+1. Misclassification error
+2. Confusion Matrix
+3. Sensitivity
+4. Specificity
+
+Plot the ROC Curve (Receiver Operating Characteristics Curve). What is the area under the curve?
+
+_Hint: Use predefined functions for this problem._
+```{r}
+plotROC(testingData$actual, predicted)
+```

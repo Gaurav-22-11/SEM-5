@@ -1,0 +1,245 @@
+---
+title: "UE20CS312 - Data Analytics - Worksheet 1a - Part 2 - EDA AND ANOVA"
+author:"'GAURAV MAHAJAN, Dept. of CSE - PES1UG20CS5150'"
+output: 
+  pdf_document: default
+  html_document: default
+  word_document: default
+date: '2022-08-26'
+---
+```{r}
+library(tidyverse)
+df<-read_csv("C:\\Users\\Gaurav\\Desktop\\DA LAB\\WORKSHEET1\\CharlesBookClubDataset.csv")
+df
+```
+
+###Problem 1 (1 point)
+Generate an understanding of the dataset via a summary of its features. Find the count, missing count,
+minimum, 1st quartile, median, mean, 3rd quartile, max and standard deviation of all relevant columns.
+Separately, print the total number of missing values in each column.
+```{r}
+summary(df)
+sum(is.na(df$M))
+sum(is.na(df$R))
+sum(is.na(df$F))
+apply(df,2,sd)
+
+```
+###Problem 2 (2 points)
+Replace missing values within the Recency, Frequency, and Monetary features with suitable values. Explain your reasoning behind the method of substitution used. Hint: Try plotting the distribution of the values in each feature using the hist function. Think about how to best deal with data imputation. Also, plot the distribution of feature values after imputation.
+
+```{r}
+hist(df$M,xlab = "Monetary",col = "yellow",border = "blue")
+hist(df$R,xlab = "Recency",col = "yellow",border = "blue")
+hist(df$F,xlab = "Frequency",col = "yellow",border = "blue")
+df$M[is.na(df$M)]<-mean(df$M,na.rm=TRUE)
+df$R[is.na(df$R)]<-median(df$R,na.rm=TRUE)
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+df$F[is.na(df$F)]<-getmode(df$F)
+hist(df$M,xlab = "Monetary",col = "yellow",border = "blue")
+hist(df$R,xlab = "Recency",col = "yellow",border = "blue")
+hist(df$F,xlab = "Frequency",col = "yellow",border = "blue")
+
+```
+###Problem 3
+Discretize the continuous values of Monetary, Recency, and Frequency into appropriate bins, and create three
+new columns Mcode, Rcode and Fcode respectively, for the discretized values. Explicitly mention the number
+of bins used and explain the choice for the bin size. Print out the summary of the newly created columns.
+Hint: Use the cut function to break on preset breakpoints. What are the most optimum breakpoints you can
+choose? Try to think of a statistical function that provides these breakpoints for optimum binning.
+```{r}
+breaks <- seq(15,490,by=19)
+df$Mcode <- cut(df$M,breaks=breaks,include.lowest=TRUE,right=FALSE)
+summary(df$Mcode)
+breaks <- seq(2,36,by=1)
+df$Rcode <- cut(df$R,breaks=breaks,include.lowest=TRUE,right=FALSE)
+summary(df$Rcode)
+breaks <- seq(1,12,by=0.6)
+df$Fcode <- cut(df$F,breaks=breaks,include.lowest=TRUE,right=FALSE)
+summary(df$Fcode)
+
+```
+Problem 4
+The marketing team heavily relies on the RFM variables of the recency of last purchase, total number of
+purchases, and total money spent on purchases to gauge the health of the members of the book club. Increases
+in either the frequency of purchases or monetary spend and decreases in time since last purchase across the
+customer base, will intuitively lead to more sales for the business.
+
+4.1 Bar Graphs (1 point) Create and visualize histograms for the discretized Recency, Frequency,
+Monetary features. Also create one for the FirstPurch feature.
+```{r}
+barplot(summary(df$Mcode))
+barplot(summary(df$Rcode))
+barplot(summary(df$Fcode))
+
+breaks<-seq(2,99,by=3)
+df$FPcode<-cut(df$FirstPurch,breaks=breaks,include.lowest=TRUE,right=FALSE)
+
+barplot(summary(df$FPcode))
+```
+
+
+4.2 Box Plot (1 point) Transform the Florence variable into a categorical feature that can take up
+the values True or False. Create and visualize horizontal box plots for the original Recency, Frequence,
+Monetary and FirstPurch features against the Florence variable. Hint: To transform Florence, use the
+concept of factors in R and set the labels True and False.
+```{r}
+df$BFlorence <- as.logical(df$Florence)
+factorflorence <- factor(df$BFlorence,labels=c("True","False"))
+print(factorflorence)
+
+boxplot(df$R ~ factorflorence, data =df, xlab = "Recency",ylab = "Florence", main = "RecencyvFlorence",horizontal = TRUE)
+
+boxplot(df$F ~ factorflorence, data = df, xlab = "Frequency",ylab = "Florence", main ="FrequencyvFlorence",horizontal = TRUE)
+
+boxplot(df$M ~ factor_florence, data = df, xlab = "Monetary",ylab = "Florence", main = "MonetaryvFlorence",horizontal = TRUE)
+
+boxplot(df$FirstPurch ~ factor_florence, data = df, xlab = "FirstPurch",ylab = "Florence", main = "FirstPurchvFlorence",horizontal = TRUE)
+```
+
+
+4.3 Density Plot (1 point) Create and visualize a density plot for Recency, Frequency, Monetary and
+FirstPurch features.
+```{r}
+density_R <- density(df$R)
+plot(density_R , frame=FALSE , main ="Recency Density Plot")
+
+density_F <- density(df$F)
+plot(density_F , frame=FALSE , main ="Frequency Density Plot")
+
+density_M <- density(df$M)
+plot(density_M , frame=FALSE , main ="Monetary Density Plot")
+
+density_FP <- density(df$FirstPurch)
+plot(density_FP , frame=FALSE , main ="First Purchase Density Plot")
+```
+
+Problem 1 (2 points)
+Captain Holt provided a file containing the names of a few People of Interest and the number of items
+logged at various evidence lockers of various precincts pertaining to them. He also instructs Peralta and Diaz
+to look into the file as he was told it should contain more information.
+
+Scully decided to use ANOVA.
+For this problem, use the data file named Scenario 1.csv in the data repository. Load the following libraries
+before moving on and read the dataset,
+```{r}
+library(ggpubr)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(broom)
+library(car)
+data <- read.csv('C:\\Users\\Gaurav\\Desktop\\DA LAB\\WORKSHEET1\\Scenario 1.csv')
+```
+
+1.  Consider the dataset. Which type of ANOVA can Scully use? (Justify why the particular test)  
+    
+```{r}
+head(data)
+str(data)
+```
+*Scully can use oneway ANOVA.*
+*Since there is a dependent variable(No. of Items) of interval type and only one independent variable/grouping variable(POI) of categorial type.*
+
+2.What function(s) could have been used by Scully for ANOVA if he uses the R programming language?
+
+*We can perform an ANOVA in R using the aov() function.* 
+*This will calculate the test statistic for ANOVA and determine whether there is significant variation among the groups formed by the levels of the independent variable.*
+
+3.  What does the output of this/these functions tell Scully? (Specify hypotheses and what each column in the summary of the output means ,considering 5% significance)
+```{r}
+one_way <- aov(No.of.items ~ POI,data=data)
+summary(one_way)
+```
+    
+
+*P-value>0.05 ,this implies that there is no statistically significant difference between the means*
+
+*Null hypothesis(H0) - all group means are equal*
+
+*Alternate hypothesis(H_a) - all group means are not equal*
+
+*Df = degrees of freedom*
+*Sum Sq = total variation between the group means and the overall mean*
+*Mean Sq = mean of the sum of squarescalculated by dividing the sum of squares by the degrees of freedom for each parameter.*
+
+*F-value column is the test statistic from the F test.*
+
+### Problem 2 (3 points)
+
+Peralta and Diaz find a member of the family, a certain Frank Pentangeli,
+through Doug Judy. They discovered that the _famiglia_ had altered this
+file resulting in invalid results. The original file was then recovered
+by the squad and was sent to Scully and Hitchcock for analysis. To their
+surprise they discovered that the file also had additional column of
+which gives the priority.
+
+The dataset has three columns:
+
+-   First column has the **Person of Interest(POI)** in the Mafia
+-   Second column has the number of evidence items collected in particular
+    evidence locker (evidence lockers are present across the city and
+    many precincts have multiple squads working on the mafia, so one POI
+    has multiple entries).
+-   Third column gives the **Priority** given to collect the evidence by a
+    particular squad with respect to a POI.
+
+Read the dataset before moving on.
+For this problem, use the data file named `Scenario 2.csv` in the data repository.
+```{r}
+data2 <- read.csv('C:\\Users\\Gaurav\\Desktop\\DA LAB\\WORKSHEET1\\Scenario 2.csv')
+```
+
+1.  Consider the data. Which type of ANOVA can Scully use? (Justify why the particular test) (2-way ANOVA)
+```{r}
+head(data2)
+str(data2)
+```
+
+*Scully can use Two-way ANOVA.Since there is a dependent variable(No. of Items) of interval type and two independent variable/grouping variable(POI and priority) of categorial type.*
+
+2.What function(s) could have been used by Scully for the ANOVA if he uses the R programming language? 
+    
+*We can perform an ANOVA in R using the aov() function. This will calculate the test statistic for ANOVA and determine whether there is significant variation among the groups formed by the levels of the independent variable.*
+
+3.  What does the output of this/these functions tell Scully? (Specify
+    hypotheses and what each column in the summary of the output means
+    considering 5% significance)    
+```{r}
+two_way_anova <- aov(No.of.items ~ POI*Priority ,data=data2)
+summary(two_way_anova)
+```
+    
+*1)H0: The means of each POI are equal.H1: The mean of at least one POI is different. In this case,p<0.05 so  POI impacts the No.of items*
+*2)H0: The means of each Priority are equal.H1: The mean of at least one priority is different.In this case,p<0.05 so  POI impacts the No.of items*
+*3)H0: There is no interaction between the POI and priority.*
+*H1: There is interaction between the POI and priority.In this case,p>0.05 so interaction between POI and Priority does not directly impacts the No.of items *
+
+4.  Hitchcock thinks that Scully has missed a task which completes the
+    ANOVA test. What should Scully have thought of? *Hint:* 
+    Philosophically, a hypothesis is a proposition made
+    as a basis for reasoning, without any assumption of its truth. 
+**Ans. Scully missed a hidden variable which impacts the No. of items.**
+
+### Problem 3 (1 point)
+
+Hitchcock also wanted to compare the number of items collected for each pair
+of Person of Interest and priority. He decided to follow
+the common practice of doing a **Tukey's HSD** . The [Tukey's
+Honestly-Significant-Difference](https://www.real-statistics.com/one-way-analysis-of-variance-anova/unplanned-comparisons/tukey-hsd/)[TukeyHSD] test lets us see which groups are different from one another.
+
+What insights did Hitchcock gain after doing the Tukey's HSD?
+(The `TukeyHSD` function can be used to do this test and the output of
+this function can be represented graphically using the `plot`
+function.)
+()
+```{r}
+two_way_tukey <- aov(No.of.items ~ POI*Priority ,data=data2)
+summary(two_way_tukey)
+tukey_hsd <- TukeyHSD(two_way_tukey,conf.level = 0.95)
+tukey_hsd
+plot(tukey_hsd)
+```

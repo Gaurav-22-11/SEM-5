@@ -1,0 +1,156 @@
+---
+title: "UE20CS312 - Data Analytics - Worksheet 3a - Basic Forecasting Techniques"
+author: "GAURAV MAHAJAN"
+date: '2022-09-28'
+output:
+  word_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(forecast)
+df <- read.csv('sales.csv')
+head(df)
+```
+```{r}
+sales <- df$Sales
+head(sales)
+```
+```{r}
+sales_ts <- ts(sales, frequency = 52, start=c(2010, 2, 5))
+sales_ts
+```
+```{r}
+plot.ts(sales_ts)
+```
+
+###Problem 1 (1 Point)
+Decompose the Sales column into trend, seasonal and random components. Plot these components as well
+(Hint: Look at the decompose function).
+```{r}
+sales_ts_component<-decompose(sales_ts)
+plot(sales_ts_component)
+```
+
+###Problem 2 (3 Points)
+• Perform forecasts using Single, Double and Triple Exponential Smoothing.
+• Plot the forecasts of all three forecasts (different colours) against the true values. (Hint: use lines)
+• Use only one function needed for all 3 forecasts, only changing parameters to get each of the 3
+models (Hint: Think about alternate names)
+```{r}
+Single_exponential_smoothing <- HoltWinters(sales_ts, alpha=0.2, beta=0, gamma=0)
+
+plot(sales_ts)
+lines(Single_exponential_smoothing$fitted[,1], lty=2, col="blue")
+```
+```{r}
+
+Single_exponential_smoothing.pred <- predict(Single_exponential_smoothing, 56 , prediction.interval = TRUE, level=0.95)
+#Visually evaluate the prediction
+plot(sales_ts , xlim=c(2010,2013.5))
+lines(Single_exponential_smoothing$fitted[,1], lty=2, col="blue")
+lines(Single_exponential_smoothing.pred[,1], col="red")
+lines(Single_exponential_smoothing.pred[,2], lty=2, col="orange")
+lines(Single_exponential_smoothing.pred[,3], lty=2, col="orange")
+```
+
+```{r}
+
+Double_exponential_smoothing <- HoltWinters(sales_ts, alpha=0.2, beta=0.1, gamma=0)
+
+plot(sales_ts)
+lines(Double_exponential_smoothing$fitted[,1], lty=2, col="red")
+```
+
+```{r}
+Double_exponential_smoothing.pred <- predict(Double_exponential_smoothing, 56 , prediction.interval = TRUE, level=0.95)
+
+plot(sales_ts , xlim=c(2010,2013.5))
+lines(Double_exponential_smoothing$fitted[,1], lty=2, col="blue")
+lines(Double_exponential_smoothing.pred[,1], col="red")
+lines(Double_exponential_smoothing.pred[,2], lty=2, col="orange")
+lines(Double_exponential_smoothing.pred[,3], lty=2, col="orange")
+```
+
+
+```{r}
+
+Triple_exponential_smoothing <- HoltWinters(sales_ts, alpha=0.2, beta=0.1, gamma=0.1)
+
+plot(sales_ts)
+lines(Triple_exponential_smoothing$fitted[,1], lty=2, col="orange")
+```
+
+```{r}
+Triple_exponential_smoothing_pred <- predict(Triple_exponential_smoothing, 56 , prediction.interval = TRUE, level=0.95)
+plot(sales_ts , xlim=c(2010,2013.5))
+lines(Triple_exponential_smoothing$fitted[,1], lty=2, col="blue")
+lines(Triple_exponential_smoothing_pred[,1], col="red")
+lines(Triple_exponential_smoothing_pred[,2], lty=2, col="orange")
+lines(Triple_exponential_smoothing_pred[,3], lty=2, col="orange")
+```
+
+###Problem 3 (2 Points)
+• Forecast Sales values by Regression using all other columns. Print summary of regression model.
+• Plot the predicted values against original as well. (Hint: Regression model predictions will not be a
+Time Series, so need to get both to common index/x-axis)
+• (Hint: Will not work unless one column is dropped/transformed before including it in the regression.
+Use the lm function to get linear model)
+Note: This is Multiple Linear Regression, that is, using all the columns for regression
+```{r}
+lm_pred <- lm(formula=Sales ~ .-X-Date,data=df)
+summary(lm_pred)
+#Plot the predicted values against original
+library(ggplot2)
+ggplot(df, aes(x=predict(lm_pred), y= Sales)) +
+geom_point() +
+geom_abline(intercept=0, slope=1) +
+labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+```
+
+
+###Problem 4 (2 Points)
+Plot the Laptop_Demand column as a time series. Identify the forecasting required for this type of Time-series,
+and forecast the values for all 143 weeks (Hint: Look at functions in the forecast package)
+```{r}
+library(forecast)
+
+laptop <- df$Laptop_Demand
+laptop_ts <- ts(laptop, frequency = 12)
+
+
+plot(laptop_ts)
+
+### ARIMA is used to forecast the above timeseries as we are predicting futur values using the past.
+mymodel <- auto.arima(laptop_ts)
+
+forecast_future <- forecast(mymodel, level=c(95), h=143)
+forecast_future
+```
+###Problem 5 (2 Points)
+Evaluate the accuracy of all 3 Exponential Smoothing models (from Problem 2) and Regression models
+using the MAPE and RMSE metrics. Comment on which is the best Exponential Smoothing method, and
+if Regression is better than Exponential Smoothing? Provide a reasoning for why the best model is better
+suited for the Sales data (Bonus Point: reasoning for why the 2 other models perform similarly)
+```{r}
+library("Metrics")
+#For regression Model
+sprintf("MAPE value for regression model is: %f",mape(sales_ts,lm_pred$fitted))
+sprintf("RMSE value for Regression model is: %f",rmse(sales_ts,lm_pred$fitted))
+
+#For Single Exponential Smoothing Model
+sprintf("MAPE value for Single Exponential smoothing model is: %f",mape(sales_ts,Single_exponential_smoothing$fitted))
+sprintf("RMSE value for Single Exponential smoothing model is: %f",rmse(sales_ts,Single_exponential_smoothing$fitted))
+
+#For Double Exponential Smoothing Model
+sprintf("MAPE value for Double Exponential smoothing model is: %f",mape(sales_ts,Double_exponential_smoothing$fitted))
+sprintf("RMSE value for Double Exponential smoothing model is: %f",rmse(sales_ts,Double_exponential_smoothing$fitted))
+
+#For Triple Exponential Smoothing Model
+sprintf("MAPE value for Triple Exponential smoothing model is: %f",mape(sales_ts,Triple_exponential_smoothing$fitted))
+sprintf("RMSE value for Triple Exponential smoothing model is: %f",rmse(sales_ts,Triple_exponential_smoothing$fitted))
+```
+
